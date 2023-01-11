@@ -19,6 +19,9 @@ def to_camel_case(model):
 
 
 class Client(requests.Session):
+    
+    _cache_fields = {}
+    
     def __init__(self, url=None, token=None, user=None, password=None):
         super(Client, self).__init__()
         self.headers.update({
@@ -57,11 +60,11 @@ class Model(object):
 
     @property
     def cache_fields(self):
-        return self.__class__._fields.get(self._name, {})
+        return self.api.__class__._cache_fields.get(self._name, {})
 
     @cache_fields.setter
     def cache_fields(self, value):
-        self.__class__._fields[self._name] = value
+        self.api.__class__._cache_fields[self._name] = value
 
     def __getattr__(self, item):
         def wrapper(*args, **kwargs):
