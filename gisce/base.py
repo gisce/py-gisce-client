@@ -1,7 +1,8 @@
 import requests
+from . import __version__
 
 USER_AGENT = "PyGisceClient/Python"
-VERSION = "1.0.0"
+VERSION = __version__
 DEBUG = False
 if DEBUG:
     import logging
