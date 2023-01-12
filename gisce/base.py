@@ -68,6 +68,9 @@ class Model(object):
         self.api = api
         if not self.cache_fields:
             self.cache_fields = self.fields_get()
+        self.browse_class = type(
+            'BrowseRecord', (BrowseRecord, self.api.model_class), {}
+        )
 
     @property
     def camelcase(self):
@@ -90,13 +93,10 @@ class Model(object):
         return wrapper
 
     def browse(self, ids):
-        BrowseRecordType = type(
-            'BrowseRecord', (BrowseRecord, self.api.model_class), {}
-        )
         if isinstance(ids, (tuple, list)):
-            return [BrowseRecordType(self._name, self.api, x) for x in ids]
+            return [self.browse_class(self._name, self.api, x) for x in ids]
         else:
-            return BrowseRecordType(self._name, self.api, ids)
+            return self.browse_class(self._name, self.api, ids)
 
     def __repr__(self):
         return '<{} {}>'.format(self.camelcase, self.api.url)
@@ -120,9 +120,9 @@ class BrowseRecord(Model):
             result = self.read([item])[0][item]
             definition = self.cache_fields[item]
             if definition['type'] == 'many2one':
-                result = BrowseRecord(definition['relation'], self.api, result[0])
+                result = self.browse_class(definition['relation'], self.api, result[0])
             elif definition['type'].endswith('2many'):
-                result = [BrowseRecord(definition['relation'], self.api, x) for x in result]
+                result = [self.browse_class(definition['relation'], self.api, x) for x in result]
             self.values[item] = result
         return self.values.get(item)
 
