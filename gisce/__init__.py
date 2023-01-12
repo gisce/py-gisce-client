@@ -13,4 +13,7 @@ else:
         __version__ = 'unknown'
 
 
-from .base import Client
+
+from __future__ import absolute_import
+from .restapi import RestApiClient
+from .msgpack import MsgPackClient
