@@ -18,9 +18,21 @@ def to_camel_case(model):
     return camel_case
 
 
+def to_dot(name):
+    """
+    Converts a model name from _ to .
+    :param name: Module name
+    :return: Module name converted
+    """
+    import re
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1.\2', name)
+    return re.sub('([a-z])([A-Z0-9])', r'\1.\2', s1).lower()
+
+
 class Client(requests.Session):
     
     _cache_fields = {}
+    model_class = None
     
     def __init__(self, url=None, token=None, user=None, password=None):
         super(Client, self).__init__()
@@ -42,11 +54,13 @@ class Client(requests.Session):
         return super(Client, self).request(method, url, *args, **kwargs)
 
     def model(self, model):
-        return Model(model, self)
+        return self.model_class(model, self)
+
+    def __getattr__(self, item):
+        return self.model(to_dot(item))
 
 
 class Model(object):
-    _fields = {}
 
     def __init__(self, name, api):
         self._name = name
@@ -66,21 +80,22 @@ class Model(object):
     def cache_fields(self, value):
         self.api.__class__._cache_fields[self._name] = value
 
+    def _call(self, method, *args, **kwargs):
+        raise NotImplementedError
+
     def __getattr__(self, item):
         def wrapper(*args, **kwargs):
-            result = self.api.post('{}/{}'.format(self.camelcase, item), json={'args': args, 'kwargs': kwargs})
-            if result.status_code == 200:
-                return result.json()['res']
-            else:
-                raise ApiException('\n'.join(result.json().get('errors', [])))
-
+            return self._call(item, *args, **kwargs)
         return wrapper
 
     def browse(self, ids):
+        BrowseRecordType = type(
+            'BrowseRecord', (BrowseRecord, self.api.model_class), {}
+        )
         if isinstance(ids, (tuple, list)):
-            return [BrowseRecord(self._name, self.api, x) for x in ids]
+            return [BrowseRecordType(self._name, self.api, x) for x in ids]
         else:
-            return BrowseRecord(self._name, self.api, ids)
+            return BrowseRecordType(self._name, self.api, ids)
 
     def __repr__(self):
         return '<{} {}>'.format(self.camelcase, self.api.url)
@@ -99,10 +114,9 @@ class BrowseRecord(Model):
                 args = ([self.id],) + args
                 parent = super(BrowseRecord, self).__getattr__(item)
                 return parent(*args, **kwargs)
-
             return wrapper
         elif item not in self.values:
-            result = self.read(self.id, [item])[item]
+            result = self.read([item])[0][item]
             definition = self.cache_fields[item]
             if definition['type'] == 'many2one':
                 result = BrowseRecord(definition['relation'], self.api, result[0])
