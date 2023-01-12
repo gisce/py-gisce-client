@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import sys
 if sys.version_info < (3, 8, 0):
     try:
@@ -14,6 +15,5 @@ else:
 
 
 
-from __future__ import absolute_import
 from .restapi import RestApiClient
 from .msgpack import MsgPackClient
