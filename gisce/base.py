@@ -31,8 +31,7 @@ def to_dot(name):
 
 
 class Client(requests.Session):
-    
-    _cache_fields = {}
+
     model_class = None
     
     def __init__(self, url=None, token=None, user=None, password=None):
@@ -49,6 +48,7 @@ class Client(requests.Session):
         else:
             raise Exception('User/password or token must be passed')
         self.url = url
+        self._cache_fields = {}
 
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
@@ -68,9 +68,6 @@ class Model(object):
         self.api = api
         if not self.cache_fields:
             self.cache_fields = self.fields_get()
-        self.browse_class = type(
-            'BrowseRecord', (BrowseRecord, self.api.model_class), {}
-        )
 
     @property
     def camelcase(self):
@@ -78,11 +75,11 @@ class Model(object):
 
     @property
     def cache_fields(self):
-        return self.api.__class__._cache_fields.get(self._name, {})
+        return self.api._cache_fields.get(self._name, {})
 
     @cache_fields.setter
     def cache_fields(self, value):
-        self.api.__class__._cache_fields[self._name] = value
+        self.api._cache_fields[self._name] = value
 
     def _call(self, method, *args, **kwargs):
         raise NotImplementedError
@@ -94,37 +91,41 @@ class Model(object):
 
     def browse(self, ids):
         if isinstance(ids, (tuple, list)):
-            return [self.browse_class(self._name, self.api, x) for x in ids]
+            return [BrowseRecord(self, x) for x in ids]
         else:
-            return self.browse_class(self._name, self.api, ids)
+            return BrowseRecord(self, ids)
 
     def __repr__(self):
         return '<{} {}>'.format(self.camelcase, self.api.url)
 
 
-class BrowseRecord(Model):
-    def __init__(self, name, api, id):
-        super(BrowseRecord, self).__init__(name, api)
-        self.id = id
-        self.values = {}
+class BrowseRecord(object):
+    def __init__(self, model, res_id):
+        self._model = model
+        self.id = res_id
+        self._values = {}
 
     def __getattr__(self, item):
-
-        if item not in self.cache_fields:
+        if item not in self._model.cache_fields:
             def wrapper(*args, **kwargs):
                 args = ([self.id],) + args
-                parent = super(BrowseRecord, self).__getattr__(item)
-                return parent(*args, **kwargs)
+                return getattr(self._model, item)(*args, **kwargs)
             return wrapper
-        elif item not in self.values:
+        elif item not in self._values:
             result = self.read([item])[0][item]
-            definition = self.cache_fields[item]
-            if definition['type'] == 'many2one':
-                result = self.browse_class(definition['relation'], self.api, result[0])
-            elif definition['type'].endswith('2many'):
-                result = [self.browse_class(definition['relation'], self.api, x) for x in result]
-            self.values[item] = result
-        return self.values.get(item)
+            definition = self._model.cache_fields[item]
+            if 'relation' in definition:
+                obj = self._model.api.model(definition['relation'])
+                if definition['type'] == 'many2one':
+                    result = obj.browse(result[0])
+                elif definition['type'].endswith('2many'):
+                    result = [obj.browse(x) for x in result]
+            self._values[item] = result
+        return self._values.get(item)
 
     def __repr__(self):
-        return '<BrowseRecord {}({}): {}>'.format(self._name, self.id, self.api.url)
+        return '<{} {}({}): {}>'.format(
+            self.__class__.__name__,
+            self._model._name,
+            self.id, self._model.api.url
+        )
