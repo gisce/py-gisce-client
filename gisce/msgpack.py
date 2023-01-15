@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from .base import Client, Model
+from .base import RequestsClient, Model
 try:
     import msgpack
     MSGPACK_AVAILABLE = True
@@ -27,7 +27,7 @@ class MsgPackModel(Model):
             return msgpack.unpackb(result, raw=False)
 
 
-class MsgPackClient(Client):
+class MsgPackClient(RequestsClient):
     model_class = MsgPackModel
 
     def __init__(self, url, database, token=None, user=None, password=None,

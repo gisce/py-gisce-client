@@ -14,6 +14,6 @@ else:
         __version__ = 'unknown'
 
 
-
 from .restapi import RestApiClient
 from .msgpack import MsgPackClient
+from .xmlrpc import XmlRpcClient

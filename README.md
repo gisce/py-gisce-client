@@ -23,3 +23,14 @@ database = 'test'
 c = Client(url, database=database, user=user, password=password)
 users_obj = c.model('res.users')
 ```
+
+## Using XML-RPC API interface
+```python
+from gisce import XmlRpcClient as Client
+url = 'http://localhost:8069'
+user = 'admin'
+password = 'admin'
+database = 'test'
+c = Client(url, database=database, user=user, password=password)
+users_obj = c.model('res.users')
+```

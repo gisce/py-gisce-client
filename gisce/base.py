@@ -30,12 +30,18 @@ def to_dot(name):
     return re.sub('([a-z])([A-Z0-9])', r'\1.\2', s1).lower()
 
 
-class Client(requests.Session):
+class BaseClient(object):
 
     model_class = None
+
+    def __init__(self):
+        self._cache_fields = {}
+
+
+class RequestsClient(requests.Session, BaseClient):
     
     def __init__(self, url=None, token=None, user=None, password=None):
-        super(Client, self).__init__()
+        super(RequestsClient, self).__init__()
         self.headers.update({
             'User-Agent': '{}/{}'.format(USER_AGENT, VERSION)
         })
@@ -52,7 +58,7 @@ class Client(requests.Session):
 
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
-        return super(Client, self).request(method, url, *args, **kwargs)
+        return super(RequestsClient, self).request(method, url, *args, **kwargs)
 
     def model(self, model):
         return self.model_class(model, self)
