@@ -1,4 +1,4 @@
-from .base import Client, Model, ApiException
+from .base import RequestsClient, Model, ApiException
 
 
 class RestApiModel(Model):
@@ -13,7 +13,7 @@ class RestApiModel(Model):
             raise ApiException('\n'.join(result.json().get('errors', [])))
 
 
-class RestApiClient(Client):
+class RestApiClient(RequestsClient):
     model_class = RestApiModel
 
 
