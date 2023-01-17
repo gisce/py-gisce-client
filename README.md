@@ -34,3 +34,16 @@ database = 'test'
 c = Client(url, database=database, user=user, password=password)
 users_obj = c.model('res.users')
 ```
+
+## Using a single method
+```python
+from gisce import connect
+url = 'http+xmlrpc://localhost:8069'
+c = connect(url,'test', user='admin', password='agmin')
+users_obj = c.model('res.users')
+```
+
+Where allowed protocols are:
+ - http[s]+restpai
+ - http[s]+msgpack
+ - http[s]+xmlrpc
