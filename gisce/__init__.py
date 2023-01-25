@@ -17,3 +17,18 @@ else:
 from .restapi import RestApiClient
 from .msgpack import MsgPackClient
 from .xmlrpc import XmlRpcClient
+
+PROTOCOL_MAP = {
+    'restapi': RestApiClient,
+    'msgpack': MsgPackClient,
+    'xmlrpc': XmlRpcClient,
+}
+
+
+def connect(url, *args, **kwargs):
+    import re
+    for protocol, client in PROTOCOL_MAP.items():
+        pattern = re.compile(r'http[s]?\+{}://*'.format(protocol))
+        if pattern.match(url):
+            url = re.sub(r'\+{}'.format(protocol), '', url)
+            return client(url, *args, **kwargs)
