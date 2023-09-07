@@ -123,7 +123,8 @@ class BrowseRecord(object):
             if 'relation' in definition:
                 obj = self._model.api.model(definition['relation'])
                 if definition['type'] == 'many2one':
-                    result = obj.browse(result[0])
+                    if result:
+                        result = obj.browse(result[0])
                 elif definition['type'].endswith('2many'):
                     result = [obj.browse(x) for x in result]
             self._values[item] = result
