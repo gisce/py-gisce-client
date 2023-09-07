@@ -18,13 +18,22 @@ class MsgPackModel(Model):
             method
         ) + args)
         if self.api.content_type == 'application/json':
-            return self.api.post('object', json=payload).json()
+            response = self.api.post('object', json=payload)
+            result = response.json()
+            if response.status_code != 200:
+                raise Exception(result['exception'])
+            else:
+                return result
         else:
-            result = self.api.post(
+            response = self.api.post(
                 'object', data=msgpack.packb(payload),
                 headers={'Content-Type': self.api.content_type}
-            ).content
-            return msgpack.unpackb(result, raw=False)
+            )
+            result = msgpack.unpackb(response.content, raw=False)
+            if response.status_code != 200:
+                raise Exception(result['exception'])
+            else:
+                return result
 
 
 class MsgPackClient(RequestsClient):
