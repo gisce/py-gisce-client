@@ -20,7 +20,7 @@ class XmlRpcClient(BaseClient):
 
     def __init__(self, url, database, token=None, user=None, password=None):
         super(XmlRpcClient, self).__init__()
-        self.url += '/xmlrpc'
+        self.url = url + '/xmlrpc'
         self.common = ServerProxy(self.url + '/common', allow_none=True)
         self.object = ServerProxy(self.url + '/object', allow_none=True)
         self.database = database

@@ -14,7 +14,7 @@ class XmlRpcWstModel(XmlRpcModel):
             self._name,
             method
         ) + args
-        return self.api.object.execute(*payload)
+        return self.api.wst.execute(*payload)
 
 
 class XmlRpcClientWst(XmlRpcClient):
@@ -25,7 +25,14 @@ class XmlRpcClientWst(XmlRpcClient):
             url, database, token, user, password
         )
         self.tid = None
-        self.object = ServerProxy(self.url + '/ws_transaction', allow_none=True)
+        self.sync = ServerProxy(self.url + '/ws_transaction', allow_none=True)
+
+    @property
+    def wst(self):
+        if self.tid:
+            return self.sync
+        else:
+            return self.object
 
     def __enter__(self):
         self.begin()
@@ -39,19 +46,21 @@ class XmlRpcClientWst(XmlRpcClient):
         self.close()
 
     def begin(self):
-        self.tid = self.object.begin(self.database, self.uid, self.token)
+        self.tid = self.sync.begin(self.database, self.uid, self.password)
 
     def rollback(self):
-        return self.object.rollback(
-            self.database, self.uid, self.token, self.tid
+        return self.sync.rollback(
+            self.database, self.uid, self.password, self.tid
         )
 
     def commit(self):
-        return self.object.commit(
-            self.database, self.uid, self.token, self.tid
+        return self.sync.commit(
+            self.database, self.uid, self.password, self.tid
         )
 
     def close(self):
-        return self.object.close_connection(
-            self.database, self.uid, self.token, self.tid
+        res = self.sync.close_connection(
+            self.database, self.uid, self.password, self.tid
         )
+        self.tid = None
+        return res
