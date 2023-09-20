@@ -17,11 +17,13 @@ else:
 from .restapi import RestApiClient
 from .msgpack import MsgPackClient
 from .xmlrpc import XmlRpcClient
+from .xmlprc_wst import XmlRpcClientWst
 
 PROTOCOL_MAP = {
     'restapi': RestApiClient,
     'msgpack': MsgPackClient,
     'xmlrpc': XmlRpcClient,
+    'xmlrpc-wst': XmlRpcClientWst,
 }
 
 
