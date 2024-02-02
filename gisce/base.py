@@ -76,6 +76,10 @@ class Model(object):
             self.cache_fields = self.fields_get()
 
     @property
+    def client(self):
+        return self.api
+
+    @property
     def camelcase(self):
         return to_camel_case(self._name)
 
