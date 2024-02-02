@@ -109,6 +109,30 @@ class Model(object):
         return '<{} {}>'.format(self.camelcase, self.api.url)
 
 
+class PositionArgumentsModel(Model):
+
+    def search(self, args, offset=0, limit=None, order=None,
+               context=None, count=False):
+        return self._call(
+            'search', args, offset, limit, order, context, count
+        )
+
+    def create(self, vals, context=None):
+        res_id = self._call('create', vals, context)
+        return self.browse(res_id)
+
+    def read(self, ids, fields=None, context=None, load='_classic_read'):
+        return self._call('read', ids, fields, context, load)
+
+    def __getattr__(self, item):
+        def wrapper(*args, **kwargs):
+            context = kwargs.pop('context', None)
+            if context:
+                args = args + (context, )
+            return self._call(item, *args, **kwargs)
+        return wrapper
+
+
 class BrowseRecord(object):
     def __init__(self, model, res_id):
         self._model = model

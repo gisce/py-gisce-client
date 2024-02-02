@@ -1,9 +1,9 @@
 from __future__ import absolute_import
-from .base import BaseClient, Model, to_dot
+from .base import BaseClient, PositionArgumentsModel, to_dot
 from .compat import ServerProxy
 
 
-class XmlRpcModel(Model):
+class XmlRpcModel(PositionArgumentsModel):
     def _call(self, method, *args, **kwargs):
         payload = (
             self.api.database,

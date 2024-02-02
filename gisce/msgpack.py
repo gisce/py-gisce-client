@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from .base import RequestsClient, Model
+from .base import RequestsClient, PositionArgumentsModel
 try:
     import msgpack
     MSGPACK_AVAILABLE = True
@@ -7,7 +7,7 @@ except ImportError:
     MSGPACK_AVAILABLE = False
 
 
-class MsgPackModel(Model):
+class MsgPackModel(PositionArgumentsModel):
     def _call(self, method, *args, **kwargs):
         payload = list((
             'execute',
