@@ -32,6 +32,9 @@ class XmlRpcClient(BaseClient):
             self.password = token
         else:
             self.login(user, password)
+        self.models = self.object.obj_list(
+            self.database, self.uid, self.password
+        )
 
     def login(self, user, password):
         uid = self.common.login(self.database, user, password)
@@ -40,9 +43,6 @@ class XmlRpcClient(BaseClient):
             self.password = password
         else:
             raise ValueError('Error with user/password')
-
-    def model(self, model):
-        return self.model_class(model, self)
 
     def report(self, object, ids, datas=None, context=None):
         return self.report_service.report(
@@ -53,6 +53,3 @@ class XmlRpcClient(BaseClient):
         return self.report_service.report_get(
             self.database, self.uid, self.password, report_id
         )
-
-    def __getattr__(self, item):
-        return self.model(to_dot(item))
