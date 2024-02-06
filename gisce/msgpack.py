@@ -7,33 +7,51 @@ except ImportError:
     MSGPACK_AVAILABLE = False
 
 
-class MsgPackModel(PositionArgumentsModel):
+class MsgPackProtocol(object):
+    def __init__(self, api, endpoint):
+        self.api = api
+        self.endpoint = endpoint
+
+    def __getattr__(self, item):
+        def wrapper(*args, **kwargs):
+            return self._call(item, *args, **kwargs)
+        return wrapper
+
     def _call(self, method, *args, **kwargs):
         payload = list((
-            'execute',
+            method,
             self.api.database,
             self.api.uid,
             self.api.password,
-            self._name,
-            method
         ) + args)
         if self.api.content_type == 'application/json':
-            response = self.api.post('object', json=payload)
+            response = self.api.post(self.endpoint, json=payload)
             result = response.json()
-            if response.status_code != 200:
-                raise Exception(result['exception'])
-            else:
-                return result
         else:
             response = self.api.post(
-                'object', data=msgpack.packb(payload),
+                self.endpoint, data=msgpack.packb(payload),
                 headers={'Content-Type': self.api.content_type}
             )
             result = msgpack.unpackb(response.content, raw=False)
-            if response.status_code != 200:
-                raise Exception(result['exception'])
-            else:
-                return result
+        if response.status_code != 200:
+            raise Exception(result['exception'])
+        else:
+            return result
+
+
+class MsgPackModel(PositionArgumentsModel):
+    def __init__(self, name, api):
+        self.protocol = MsgPackProtocol(
+            api, 'object'
+        )
+        super(MsgPackModel, self).__init__(name, api)
+
+    def _call(self, method, *args, **kwargs):
+        return self.protocol.execute(
+            self._name,
+            method,
+            *args
+        )
 
 
 class MsgPackClient(RequestsClient):
@@ -56,6 +74,7 @@ class MsgPackClient(RequestsClient):
             self.password = token
         else:
             self.login(user, password)
+        self.report_service = MsgPackProtocol(self, 'report')
 
     def login(self, user, password):
         result = self.post('common', json=['login', self.database, user, password])
@@ -64,3 +83,9 @@ class MsgPackClient(RequestsClient):
             self.password = password
         else:
             raise ValueError('Error with user/password')
+
+    def report(self, object, ids, datas=None, context=None):
+        return self.report_service.report(object, ids, datas, context)
+
+    def report_get(self, report_id):
+        return self.report_service.report_get(report_id)
