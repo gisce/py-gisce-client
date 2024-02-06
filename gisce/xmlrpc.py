@@ -23,6 +23,7 @@ class XmlRpcClient(BaseClient):
         self.url = url + '/xmlrpc'
         self.common = ServerProxy(self.url + '/common', allow_none=True)
         self.object = ServerProxy(self.url + '/object', allow_none=True)
+        self.report_service = ServerProxy(self.url + '/report', allow_none=True)
         self.database = database
         self.uid = None
         self.password = None
@@ -42,6 +43,16 @@ class XmlRpcClient(BaseClient):
 
     def model(self, model):
         return self.model_class(model, self)
+
+    def report(self, object, ids, datas=None, context=None):
+        return self.report_service.report(
+            self.database, self.uid, self.password, object, ids, datas, context
+        )
+
+    def report_get(self, report_id):
+        return self.report_service.report_get(
+            self.database, self.uid, self.password, report_id
+        )
 
     def __getattr__(self, item):
         return self.model(to_dot(item))
