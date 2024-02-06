@@ -36,6 +36,15 @@ class BaseClient(object):
 
     def __init__(self):
         self._cache_fields = {}
+        self.models = []
+
+    def __getattr__(self, item):
+        return self.model(to_dot(item))
+
+    def model(self, model):
+        if self.models and model not in self.models:
+            raise Exception("Model '{}' not found".format(model))
+        return self.model_class(model, self)
 
 
 class RequestsClient(requests.Session, BaseClient):
@@ -59,12 +68,6 @@ class RequestsClient(requests.Session, BaseClient):
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
         return super(RequestsClient, self).request(method, url, *args, **kwargs)
-
-    def model(self, model):
-        return self.model_class(model, self)
-
-    def __getattr__(self, item):
-        return self.model(to_dot(item))
 
 
 class Model(object):

@@ -75,6 +75,7 @@ class MsgPackClient(RequestsClient):
         else:
             self.login(user, password)
         self.report_service = MsgPackProtocol(self, 'report')
+        self.models = MsgPackProtocol(self, 'object').obj_list()
 
     def login(self, user, password):
         result = self.post('common', json=['login', self.database, user, password])
