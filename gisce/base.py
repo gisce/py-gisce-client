@@ -51,6 +51,8 @@ class RequestsClient(requests.Session, BaseClient):
     
     def __init__(self, url=None, token=None, user=None, password=None):
         super(RequestsClient, self).__init__()
+        BaseClient.__init__(self)
+
         self.headers.update({
             'User-Agent': '{}/{}'.format(USER_AGENT, VERSION)
         })
