@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from .base import BaseClient, PositionArgumentsModel, to_dot
-from .compat import ServerProxy
+from .compat import ServerProxy, SafeTransport
 
 
 class XmlRpcModel(PositionArgumentsModel):
@@ -18,12 +18,24 @@ class XmlRpcModel(PositionArgumentsModel):
 class XmlRpcClient(BaseClient):
     model_class = XmlRpcModel
 
-    def __init__(self, url, database, token=None, user=None, password=None):
+    class UnverifiedSSLTransport(SafeTransport):
+        def make_connection(self, host):
+            import ssl
+            import http.client
+            context = ssl._create_unverified_context()
+            self._connection = http.client.HTTPSConnection(host, context=context)
+            return self._connection
+
+    def __init__(self, url, database, token=None, user=None, password=None, verify=None):
         super(XmlRpcClient, self).__init__()
         self.url = url + '/xmlrpc'
-        self.common = ServerProxy(self.url + '/common', allow_none=True)
-        self.object = ServerProxy(self.url + '/object', allow_none=True)
-        self.report_service = ServerProxy(self.url + '/report', allow_none=True)
+        if verify is not None and not verify:
+            self.server_proxy_kwargs = {'transport': self.UnverifiedSSLTransport()}
+        else:
+            self.server_proxy_kwargs = {}
+        self.common = ServerProxy(self.url + '/common', allow_none=True, **self.server_proxy_kwargs)
+        self.object = ServerProxy(self.url + '/object', allow_none=True, **self.server_proxy_kwargs)
+        self.report_service = ServerProxy(self.url + '/report', allow_none=True, **self.server_proxy_kwargs)
         self.database = database
         self.uid = None
         self.password = None
