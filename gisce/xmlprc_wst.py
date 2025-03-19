@@ -20,12 +20,12 @@ class XmlRpcWstModel(XmlRpcModel):
 class XmlRpcClientWst(XmlRpcClient):
     model_class = XmlRpcWstModel
 
-    def __init__(self, url, database, token=None, user=None, password=None):
+    def __init__(self, url, database, token=None, user=None, password=None, verify=None):
         super(XmlRpcClientWst, self).__init__(
-            url, database, token, user, password
+            url, database, token, user, password, verify
         )
         self.tid = None
-        self.sync = ServerProxy(self.url + '/ws_transaction', allow_none=True)
+        self.sync = ServerProxy(self.url + '/ws_transaction', allow_none=True, **self.server_proxy_kwargs)
 
     @property
     def wst(self):

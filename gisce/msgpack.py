@@ -58,8 +58,8 @@ class MsgPackClient(RequestsClient):
     model_class = MsgPackModel
 
     def __init__(self, url, database, token=None, user=None, password=None,
-                 content_type='json'):
-        super(MsgPackClient, self).__init__(url, token, user, password)
+                 content_type='json', verify=None):
+        super(MsgPackClient, self).__init__(url, token, user, password, verify)
         self.database = database
         assert content_type in ('json', 'msgpack')
         if content_type == 'msgpack' and not MSGPACK_AVAILABLE:

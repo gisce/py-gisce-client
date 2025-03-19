@@ -49,9 +49,19 @@ class BaseClient(object):
 
 class RequestsClient(requests.Session, BaseClient):
     
-    def __init__(self, url=None, token=None, user=None, password=None):
+    def __init__(self, url=None, token=None, user=None, password=None, verify=None):
+        """
+        :param url:
+        :param token:
+        :param user:
+        :param password:
+        :param verify: If we are using self signed certificate we can skip validation using verify=False
+        To keep request default verify=None (by default if verify is None  it verifies)
+        """
         super(RequestsClient, self).__init__()
         BaseClient.__init__(self)
+
+        self.verify = verify
 
         self.headers.update({
             'User-Agent': '{}/{}'.format(USER_AGENT, VERSION)
@@ -69,7 +79,7 @@ class RequestsClient(requests.Session, BaseClient):
 
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
-        return super(RequestsClient, self).request(method, url, *args, **kwargs)
+        return super(RequestsClient, self).request(method, url, *args, verify=self.verify, **kwargs)
 
 
 class Model(object):
