@@ -43,6 +43,9 @@ class XmlRpcClient(BaseClient):
             self.uid = 'token'
             self.password = token
         else:
+            if user and not password:
+                from .compat import getpass
+                password = getpass('Password: ')
             self.login(user, password)
         self.models = self.object.obj_list(
             self.database, self.uid, self.password

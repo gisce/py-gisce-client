@@ -1,4 +1,5 @@
 import sys
+from getpass import getpass
 PY2 = sys.version_info < (3, 0, 0)
 
 if PY2:

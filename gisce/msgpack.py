@@ -59,6 +59,11 @@ class MsgPackClient(RequestsClient):
 
     def __init__(self, url, database, token=None, user=None, password=None,
                  content_type='json', verify=None):
+        # Prompt for password before calling parent init if needed
+        if user and not password and not token:
+            from .compat import getpass
+            password = getpass('Password: ')
+        
         super(MsgPackClient, self).__init__(url, token, user, password, verify)
         self.database = database
         assert content_type in ('json', 'msgpack')

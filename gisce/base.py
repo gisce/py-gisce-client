@@ -68,6 +68,10 @@ class RequestsClient(requests.Session, BaseClient):
         })
         if user and password:
             self.auth = (user, password)
+        elif user and not password and not token:
+            from .compat import getpass
+            password = getpass('base Password: ')
+            self.auth = (user, password)
         elif token:
             self.headers.update({
                 'Authorization': 'token {}'.format(token)
