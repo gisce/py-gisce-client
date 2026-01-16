@@ -38,7 +38,7 @@ class TestXmlRpcRequestId(object):
             mock_server_proxy.side_effect = server_proxy_factory
             
             # Create client
-            client = XmlRpcClient(
+            XmlRpcClient(
                 url='http://localhost:8069',
                 database='test_db',
                 user='admin',
