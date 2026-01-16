@@ -80,9 +80,9 @@ class RequestsClient(requests.Session, BaseClient):
 
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
-        if 'headers' not in kwargs:
-            kwargs['headers'] = {}
-        kwargs['headers']['X-Request-Id'] = str(uuid.uuid4())
+        headers = kwargs.get('headers', {}).copy()
+        headers['X-Request-Id'] = str(uuid.uuid4())
+        kwargs['headers'] = headers
         return super(RequestsClient, self).request(method, url, *args, verify=self.verify, **kwargs)
 
 
