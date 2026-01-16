@@ -71,7 +71,7 @@ class TestRequestIdHeader(object):
         )
         
         # Create client
-        client = MsgPackClient(
+        MsgPackClient(
             url='http://localhost:5000',
             database='test_db',
             user='test',
