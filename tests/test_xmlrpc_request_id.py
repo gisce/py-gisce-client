@@ -3,9 +3,9 @@ from __future__ import absolute_import
 import uuid
 import pytest
 try:
-    from unittest.mock import Mock, patch, MagicMock
+    from unittest.mock import Mock, patch
 except ImportError:
-    from mock import Mock, patch, MagicMock
+    from mock import Mock, patch
 
 from gisce.xmlrpc import XmlRpcClient
 
