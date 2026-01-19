@@ -1,6 +1,7 @@
 from __future__ import absolute_import
+import uuid
 from .base import BaseClient, PositionArgumentsModel, to_dot
-from .compat import ServerProxy, SafeTransport
+from .compat import ServerProxy, SafeTransport, httplib
 
 
 class XmlRpcModel(PositionArgumentsModel):
@@ -18,13 +19,21 @@ class XmlRpcModel(PositionArgumentsModel):
 class XmlRpcClient(BaseClient):
     model_class = XmlRpcModel
 
+    class BaseTransportWithRequestId(SafeTransport):
+        def send_content(self, connection, request_body):
+            connection.putheader("X-Request-Id", str(uuid.uuid4()))
+            SafeTransport.send_content(self, connection, request_body)
+
     class UnverifiedSSLTransport(SafeTransport):
         def make_connection(self, host):
             import ssl
-            import http.client
             context = ssl._create_unverified_context()
-            self._connection = http.client.HTTPSConnection(host, context=context)
+            self._connection = httplib.HTTPSConnection(host, context=context)
             return self._connection
+
+        def send_content(self, connection, request_body):
+            connection.putheader("X-Request-Id", str(uuid.uuid4()))
+            SafeTransport.send_content(self, connection, request_body)
 
     def __init__(self, url, database, token=None, user=None, password=None, verify=None):
         super(XmlRpcClient, self).__init__()
@@ -32,7 +41,7 @@ class XmlRpcClient(BaseClient):
         if verify is not None and not verify:
             self.server_proxy_kwargs = {'transport': self.UnverifiedSSLTransport()}
         else:
-            self.server_proxy_kwargs = {}
+            self.server_proxy_kwargs = {'transport': self.BaseTransportWithRequestId()}
         self.common = ServerProxy(self.url + '/common', allow_none=True, **self.server_proxy_kwargs)
         self.object = ServerProxy(self.url + '/object', allow_none=True, **self.server_proxy_kwargs)
         self.report_service = ServerProxy(self.url + '/report', allow_none=True, **self.server_proxy_kwargs)

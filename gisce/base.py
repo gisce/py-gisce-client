@@ -1,4 +1,5 @@
 import requests
+import uuid
 from . import __version__
 
 USER_AGENT = "PyGisceClient/Python"
@@ -79,6 +80,9 @@ class RequestsClient(requests.Session, BaseClient):
 
     def request(self, method, url, *args, **kwargs):
         url = '/'.join([self.url, url])
+        headers = kwargs.get('headers', {}).copy()
+        headers['X-Request-Id'] = str(uuid.uuid4())
+        kwargs['headers'] = headers
         return super(RequestsClient, self).request(method, url, *args, verify=self.verify, **kwargs)
 
 
