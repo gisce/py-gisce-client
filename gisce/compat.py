@@ -6,3 +6,7 @@ if PY2:
     from xmlrpclib import ServerProxy, SafeTransport
 else:
     from xmlrpc.client import ServerProxy, SafeTransport
+
+
+def prompt_password(label='Password: '):
+    return getpass(label)
