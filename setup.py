@@ -18,5 +18,10 @@ setup(
         'requests',
         'responses'
     ],
-    packages=find_packages()
+    packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'pygisceclient=gisce.cli:main',
+        ],
+    },
 )
