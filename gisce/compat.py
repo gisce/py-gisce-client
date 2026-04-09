@@ -5,9 +5,11 @@ PY2 = sys.version_info < (3, 0, 0)
 if PY2:
     from xmlrpclib import ServerProxy, SafeTransport
     import httplib
+    import __builtin__ as builtins
 else:
     from xmlrpc.client import ServerProxy, SafeTransport
     import http.client as httplib
+    import builtins
 
 
 def is_interactive():
@@ -20,7 +22,6 @@ def is_interactive():
     except AttributeError:
         pass
     try:
-        import builtins
         get_ipython = getattr(builtins, 'get_ipython', None)
         if get_ipython is not None and get_ipython() is not None:
             return True
