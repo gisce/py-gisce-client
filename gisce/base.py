@@ -49,8 +49,7 @@ class BaseClient(object):
 
 class RequestsClient(requests.Session, BaseClient):
     
-    def __init__(self, url=None, token=None, user=None, password=None, verify=None,
-                 prompt_for_password=False):
+    def __init__(self, url=None, token=None, user=None, password=None, verify=None):
         """
         :param url:
         :param token:
@@ -58,8 +57,6 @@ class RequestsClient(requests.Session, BaseClient):
         :param password:
         :param verify: If we are using self signed certificate we can skip validation using verify=False
         To keep request default verify=None (by default if verify is None  it verifies)
-        :param prompt_for_password: If True and user is provided without a password, prompt interactively.
-        If False (default) and user is provided without a password, raises ValueError.
         """
         super(RequestsClient, self).__init__()
         BaseClient.__init__(self)
@@ -72,13 +69,12 @@ class RequestsClient(requests.Session, BaseClient):
         if user and password:
             self.auth = (user, password)
         elif user and not password and not token:
-            if prompt_for_password:
-                from .compat import prompt_password
+            from .compat import is_interactive, prompt_password
+            if is_interactive():
                 password = prompt_password()
             else:
                 raise ValueError(
-                    "Password required for user '{}' but none provided. "
-                    "Use prompt_for_password=True for interactive prompting.".format(user)
+                    "Password required for user '{}' but none provided.".format(user)
                 )
             self.auth = (user, password)
         elif token:

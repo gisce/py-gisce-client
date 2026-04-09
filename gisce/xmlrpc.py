@@ -26,8 +26,7 @@ class XmlRpcClient(BaseClient):
             self._connection = http.client.HTTPSConnection(host, context=context)
             return self._connection
 
-    def __init__(self, url, database, token=None, user=None, password=None, verify=None,
-                 prompt_for_password=False):
+    def __init__(self, url, database, token=None, user=None, password=None, verify=None):
         super(XmlRpcClient, self).__init__()
         self.url = url + '/xmlrpc'
         if verify is not None and not verify:
@@ -45,13 +44,12 @@ class XmlRpcClient(BaseClient):
             self.password = token
         else:
             if user and not password:
-                if prompt_for_password:
-                    from .compat import prompt_password
+                from .compat import is_interactive, prompt_password
+                if is_interactive():
                     password = prompt_password()
                 else:
                     raise ValueError(
-                        "Password required for user '{}' but none provided. "
-                        "Use prompt_for_password=True for interactive prompting.".format(user)
+                        "Password required for user '{}' but none provided.".format(user)
                     )
             self.login(user, password)
         self.models = self.object.obj_list(

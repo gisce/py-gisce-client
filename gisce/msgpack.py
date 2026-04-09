@@ -58,15 +58,14 @@ class MsgPackClient(RequestsClient):
     model_class = MsgPackModel
 
     def __init__(self, url, database, token=None, user=None, password=None,
-                 content_type='json', verify=None, prompt_for_password=False):
+                 content_type='json', verify=None):
         if user and not password and not token:
-            if prompt_for_password:
-                from .compat import prompt_password
+            from .compat import is_interactive, prompt_password
+            if is_interactive():
                 password = prompt_password()
             else:
                 raise ValueError(
-                    "Password required for user '{}' but none provided. "
-                    "Use prompt_for_password=True for interactive prompting.".format(user)
+                    "Password required for user '{}' but none provided.".format(user)
                 )
 
         super(MsgPackClient, self).__init__(url, token, user, password, verify)
