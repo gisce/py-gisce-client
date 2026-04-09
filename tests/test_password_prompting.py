@@ -8,6 +8,11 @@ try:
 except ImportError:
     from mock import patch, Mock
 
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
+
 
 class TestIsInteractive(object):
     """Tests for gisce.compat.is_interactive()"""
@@ -39,7 +44,6 @@ class TestIsInteractive(object):
         mock_stdin = Mock()
         mock_stdin.isatty.return_value = False
         # Patch builtins so get_ipython is absent
-        import builtins
         with patch.object(builtins, 'get_ipython', None, create=True), \
              patch('sys.stdin', mock_stdin):
             # Temporarily remove ps1 if present
@@ -56,7 +60,6 @@ class TestIsInteractive(object):
 
     def test_returns_true_when_ipython_available_in_builtins(self):
         from gisce.compat import is_interactive
-        import builtins
         mock_get_ipython = Mock(return_value=Mock())
         mock_stdin = Mock()
         mock_stdin.isatty.return_value = False
@@ -75,7 +78,6 @@ class TestIsInteractive(object):
 
     def test_returns_false_when_ipython_returns_none(self):
         from gisce.compat import is_interactive
-        import builtins
         mock_get_ipython = Mock(return_value=None)
         mock_stdin = Mock()
         mock_stdin.isatty.return_value = False
