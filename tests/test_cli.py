@@ -4,7 +4,10 @@ import json
 import sys
 import pytest
 import responses
-from unittest.mock import patch, MagicMock
+try:
+    from unittest.mock import patch, MagicMock
+except ImportError:
+    from mock import patch, MagicMock
 from gisce.cli import main, build_parser
 
 
