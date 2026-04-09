@@ -22,7 +22,7 @@ def is_interactive():
         get_ipython = getattr(builtins, 'get_ipython', None)
         if get_ipython is not None and get_ipython() is not None:
             return True
-    except Exception:
+    except (AttributeError, RuntimeError):
         pass
     return False
 
