@@ -70,14 +70,8 @@ class RequestsClient(requests.Session, BaseClient):
         if user and password:
             self.auth = (user, password)
         elif user and not password and not token:
-            from .compat import is_interactive, prompt_password
-            if is_interactive():
-                password = prompt_password()
-            else:
-                raise ValueError(
-                    "Password required for user '{}' but none provided.".format(user)
-                )
-            self.auth = (user, password)
+            from .compat import get_password
+            self.auth = (user, get_password(user, password))
         elif token:
             self.headers.update({
                 'Authorization': 'token {}'.format(token)

@@ -53,13 +53,8 @@ class XmlRpcClient(BaseClient):
             self.password = token
         else:
             if user and not password:
-                from .compat import is_interactive, prompt_password
-                if is_interactive():
-                    password = prompt_password()
-                else:
-                    raise ValueError(
-                        "Password required for user '{}' but none provided.".format(user)
-                    )
+                from .compat import get_password
+                password = get_password(user, password)
             self.login(user, password)
         self.models = self.object.obj_list(
             self.database, self.uid, self.password

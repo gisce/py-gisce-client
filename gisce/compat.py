@@ -31,3 +31,14 @@ def is_interactive():
 
 def prompt_password(label='Password: '):
     return getpass(label)
+
+
+def get_password(user, password):
+    """Return password for user; prompt if interactive and none provided, else raise."""
+    if not password:
+        if is_interactive():
+            return prompt_password()
+        raise ValueError(
+            "Password required for user '{}' but none provided.".format(user)
+        )
+    return password
