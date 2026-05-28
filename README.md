@@ -151,7 +151,9 @@ chmod +x pygisceclient-linux-x86_64
 
 Releases are generated from conventional commits merged into `main`.
 `python-semantic-release` updates `setup.py`, creates the release commit and tag,
-builds the Python distributions, and publishes the GitHub release assets.
+builds the Python distributions, and publishes the GitHub release assets. The
+GitHub release upload includes both `dist/*` Python package files and the
+`release-assets/*` standalone CLI binary plus checksum.
 
 PyPI publishing uses `PYPI_TOKEN` when configured, falling back to the
 organization-level `PYPI_MASTER_TOKEN`.

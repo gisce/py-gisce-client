@@ -69,7 +69,16 @@ jobs:
           cd release-assets
           sha256sum pygisceclient-linux-x86_64 > pygisceclient-linux-x86_64.sha256
 
-      - name: Upload release assets
+      - name: Verify GitHub release assets
+        if: steps.release.outputs.released == 'true'
+        run: |
+          test -s dist/*.tar.gz
+          test -s dist/*.whl
+          test -s release-assets/pygisceclient-linux-x86_64
+          test -s release-assets/pygisceclient-linux-x86_64.sha256
+          ls -lh dist release-assets
+
+      - name: Upload Python distributions and standalone binary to GitHub Release
         if: steps.release.outputs.released == 'true'
         uses: python-semantic-release/publish-action@v10.5.3
         with:
