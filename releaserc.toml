@@ -1,0 +1,19 @@
+[semantic_release]
+tag_format = "v{version}"
+version_variables = ["setup.py:version"]
+build_command = "python setup.py sdist"
+commit_message = "chore(release): {version}"
+commit_parser = "conventional"
+major_on_zero = false
+
+[semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[semantic_release.remote]
+name = "origin"
+type = "github"
+
+[semantic_release.publish]
+dist_glob_patterns = ["dist/*", "release-assets/*"]
+upload_to_vcs_release = true

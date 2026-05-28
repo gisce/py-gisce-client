@@ -138,8 +138,7 @@ The result is printed as JSON to standard output.
 
 GitHub releases include a Linux x86_64 standalone CLI binary named
 `pygisceclient-linux-x86_64`, plus its `.sha256` checksum. The binary is built
-with PyInstaller when a version tag such as `v0.10.1` or `v0.10.1-rc1` is
-pushed.
+with PyInstaller during the automated release workflow.
 
 The release binary can be used without installing the Python package:
 
@@ -147,3 +146,15 @@ The release binary can be used without installing the Python package:
 chmod +x pygisceclient-linux-x86_64
 ./pygisceclient-linux-x86_64 --help
 ```
+
+## Automated releases
+
+Releases are generated from conventional commits merged into `main`.
+`python-semantic-release` updates `setup.py`, creates the release commit and tag,
+builds the source distribution with `python setup.py sdist`, and publishes the
+GitHub release assets. The GitHub release upload includes both the `dist/*`
+source distribution and the `release-assets/*` standalone CLI binary plus
+checksum.
+
+PyPI publishing uses `PYPI_TOKEN` when configured, falling back to the
+organization-level `PYPI_MASTER_TOKEN`.
