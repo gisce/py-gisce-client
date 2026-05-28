@@ -133,3 +133,17 @@ pygisceclient \
 ```
 
 The result is printed as JSON to standard output.
+
+## Standalone release binary
+
+GitHub releases include a Linux x86_64 standalone CLI binary named
+`pygisceclient-linux-x86_64`, plus its `.sha256` checksum. The binary is built
+with PyInstaller when a version tag such as `v0.10.1` or `v0.10.1-rc1` is
+pushed.
+
+The release binary can be used without installing the Python package:
+
+```bash
+chmod +x pygisceclient-linux-x86_64
+./pygisceclient-linux-x86_64 --help
+```
