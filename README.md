@@ -159,3 +159,21 @@ distribution and the `release-assets/*` standalone CLI binary plus checksum.
 
 PyPI publishing uses `PYPI_TOKEN` when configured, falling back to the
 organization-level `PYPI_MASTER_TOKEN`.
+
+The release flow is:
+
+1. A normal pull request is merged into `main`.
+2. The release workflow runs on that merge commit.
+3. `python-semantic-release` calculates the next version from conventional
+   commits and existing tags.
+4. The workflow checkout gets the stamped `setup.py` version only for the local
+   build.
+5. The source distribution in `dist/*` and the standalone binary in
+   `release-assets/*` are built from that stamped checkout.
+6. The workflow pushes the version tag, creates the GitHub Release, uploads the
+   Python distribution and binary assets to that release, and uploads `dist/*`
+   to PyPI when a PyPI token is configured.
+
+There is no `chore(release): ...` commit on `main`. The released project version
+is represented by the version tag and by the published artifacts, not by a
+version-bump commit in the repository history.
