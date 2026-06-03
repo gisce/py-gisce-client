@@ -47,14 +47,9 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v10.5.3
         with:
           config_file: releaserc.toml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # The release job runs on protected main. Keep version stamping local
-          # for the build artifacts, then tag the triggering commit without
-          # pushing a release commit to main.
-          commit: "false"
-          tag: "true"
-          push: "true"
-          vcs_release: "true"
+          # Semantic release must push the version bump commit and the matching
+          # tag. On protected main, configure GH_PAT with the required bypass.
+          github_token: ${{ secrets.GH_PAT || github.token }}
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
 
