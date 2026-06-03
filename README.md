@@ -150,11 +150,12 @@ chmod +x pygisceclient-linux-x86_64
 ## Automated releases
 
 Releases are generated from conventional commits merged into `main`.
-`python-semantic-release` updates `setup.py`, creates the release commit and tag,
-builds the source distribution with `python setup.py sdist`, and publishes the
-GitHub release assets. The GitHub release upload includes both the `dist/*`
-source distribution and the `release-assets/*` standalone CLI binary plus
-checksum.
+`python-semantic-release` stamps the next version in the workflow checkout,
+builds the source distribution with `python setup.py sdist`, tags the triggering
+commit, and publishes the GitHub release assets. It does not push a release
+commit to `main`, so branch protection still requires code changes to go through
+pull requests. The GitHub release upload includes both the `dist/*` source
+distribution and the `release-assets/*` standalone CLI binary plus checksum.
 
 PyPI publishing uses `PYPI_TOKEN` when configured, falling back to the
 organization-level `PYPI_MASTER_TOKEN`.

@@ -49,8 +49,12 @@ jobs:
           config_file: releaserc.toml
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # The release job runs on protected main. Keep version stamping local
-          # for the build artifacts, but do not push a release commit to main.
+          # for the build artifacts, then tag the triggering commit without
+          # pushing a release commit to main.
           commit: "false"
+          tag: "true"
+          push: "true"
+          vcs_release: "true"
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
 
