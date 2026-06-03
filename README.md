@@ -174,11 +174,31 @@ chmod +x pygisceclient-linux-x86_64
 ## Automated releases
 
 Releases are generated from conventional commits merged into `main`.
-`python-semantic-release` updates `setup.py`, creates the release commit and tag,
-builds the source distribution with `python setup.py sdist`, and publishes the
-GitHub release assets. The GitHub release upload includes both the `dist/*`
-source distribution and the `release-assets/*` standalone CLI binary plus
-checksum.
+`python-semantic-release` updates `setup.py`, creates the release commit and
+tag, builds the source distribution with `python setup.py sdist`, and publishes
+the GitHub release assets. The version tag points to the release commit that
+contains the `setup.py` version bump.
 
-PyPI publishing uses `PYPI_TOKEN` when configured, falling back to the
-organization-level `PYPI_MASTER_TOKEN`.
+The release workflow pushes the release commit and tag from GitHub Actions. If
+`main` is protected, the repository must configure `GH_PAT` with the required
+permission or branch-protection bypass for this release push. Without that
+bypass, the workflow will fail when pushing the version bump commit to `main`.
+The GitHub release upload includes both the `dist/*` source distribution and the
+`release-assets/*` standalone CLI binary plus checksum. PyPI publishing uses
+`PYPI_TOKEN` when configured, falling back to the organization-level
+`PYPI_MASTER_TOKEN`.
+
+The release flow is:
+
+1. A normal pull request is merged into `main`.
+2. The release workflow runs on that merge commit.
+3. `python-semantic-release` calculates the next version from conventional
+   commits and existing tags.
+4. The workflow updates `setup.py`, creates the release commit, and pushes that
+   commit to `main`.
+5. The workflow creates and pushes the version tag on that release commit.
+6. The source distribution in `dist/*` and the standalone binary in
+   `release-assets/*` are built from the release commit checkout.
+7. The workflow creates the GitHub Release, uploads the Python distribution and
+   binary assets to that release, and uploads `dist/*` to PyPI when a PyPI token
+   is configured.
