@@ -20,8 +20,9 @@ pygisceclient \
   --url <PROTOCOL_URL> \
   --database <DB> \
   --user <USER> --password <PASS> \
-  --model <MODEL> \
+  (--model <MODEL> | --service <SERVICE>) \
   --method <METHOD> \
+  [--service-auth auto|raw|authenticated] \
   --args '<JSON_ARRAY>' \
   --kwargs '<JSON_OBJECT>'
 ```
@@ -167,7 +168,49 @@ pygisceclient ... --model account.invoice --method invoice_open \
 
 ---
 
-## 4. Domain Syntax (Search Filters)
+## 4. MsgPack Services
+
+When using `https+msgpack://` or `http+msgpack://`, the CLI can call MsgPack
+services directly with `--service`.
+
+```bash
+pygisceclient \
+  --url https+msgpack://erp.example.com \
+  --database mydb \
+  --token "$ERP_TOKEN" \
+  --service common \
+  --method check_for_features \
+  --args '[["feature_a", "feature_b"]]'
+```
+
+Service calls use positional JSON arguments only; `--kwargs` is reserved for
+model calls. The default `--service-auth auto` mode calls `common`, `db` and
+`wc` raw, because many of their methods do not receive `database`, `uid` and
+`password`. Other services are called authenticated.
+
+Force the mode only when the ERP service expects the opposite convention:
+
+```bash
+pygisceclient ... --service report --service-auth authenticated \
+  --method report --args '["account.invoice", [1], {}, {}]'
+
+pygisceclient ... --service common --service-auth raw \
+  --method check_for_features --args '[["webclient_feature"]]'
+```
+
+In Python, use `MsgPackClient.service(name, authenticated=None)` for the same
+behavior. `None` means auto mode; pass `False` for raw or `True` for
+authenticated:
+
+```python
+features = client.common.check_for_features(['webclient_feature'])
+databases = client.db.list()
+report_id = client.service('report').report('account.invoice', [1], {}, {})
+```
+
+---
+
+## 5. Domain Syntax (Search Filters)
 
 Domains are lists of condition tuples following Polish (prefix) notation.
 
@@ -213,7 +256,7 @@ Complex:
 
 ---
 
-## 5. Field Types
+## 6. Field Types
 
 ### Simple fields
 
@@ -260,7 +303,7 @@ Use special tuple commands in `write`/`create` vals:
 
 ---
 
-## 6. Common Workflow Patterns
+## 7. Common Workflow Patterns
 
 ### Discover a model's schema
 
@@ -311,7 +354,7 @@ pygisceclient ... --model ir.model.fields --method read \
 
 ---
 
-## 7. Core Base Models
+## 8. Core Base Models
 
 These models are always available:
 
@@ -340,7 +383,7 @@ These models are always available:
 
 ---
 
-## 8. Best Practices
+## 9. Best Practices
 
 1. **Always discover the schema first** — call `fields_get` on a model before reading or writing.
 2. **Paginate large results** — use `offset` and `limit` in `search`. Process in batches of 1000.
