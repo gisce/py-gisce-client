@@ -8,9 +8,10 @@ except ImportError:
 
 
 class MsgPackProtocol(object):
-    def __init__(self, api, endpoint):
+    def __init__(self, api, endpoint, authenticated=True):
         self.api = api
         self.endpoint = endpoint
+        self.authenticated = authenticated
 
     def __getattr__(self, item):
         def wrapper(*args, **kwargs):
@@ -18,12 +19,14 @@ class MsgPackProtocol(object):
         return wrapper
 
     def _call(self, method, *args, **kwargs):
-        payload = list((
-            method,
-            self.api.database,
-            self.api.uid,
-            self.api.password,
-        ) + args)
+        payload = [method]
+        if self.authenticated:
+            payload.extend([
+                self.api.database,
+                self.api.uid,
+                self.api.password,
+            ])
+        payload.extend(args)
         if self.api.content_type == 'application/json':
             response = self.api.post(self.endpoint, json=payload)
             result = response.json()
@@ -56,6 +59,7 @@ class MsgPackModel(PositionArgumentsModel):
 
 class MsgPackClient(RequestsClient):
     model_class = MsgPackModel
+    raw_services = ('common', 'db', 'wc')
 
     def __init__(self, url, database, token=None, user=None, password=None,
                  content_type='json', verify=None):
@@ -78,8 +82,11 @@ class MsgPackClient(RequestsClient):
             self.password = token
         else:
             self.login(user, password)
-        self.report_service = MsgPackProtocol(self, 'report')
-        self.models = MsgPackProtocol(self, 'object').obj_list()
+        self.common = self.service('common', authenticated=False)
+        self.db = self.service('db', authenticated=False)
+        self.report_service = self.service('report')
+        self.object_service = self.service('object')
+        self.models = self.object_service.obj_list()
 
     def login(self, user, password):
         result = self.post('common', json=['login', self.database, user, password])
@@ -88,6 +95,11 @@ class MsgPackClient(RequestsClient):
             self.password = password
         else:
             raise ValueError('Error with user/password')
+
+    def service(self, name, authenticated=None):
+        if authenticated is None:
+            authenticated = name not in self.raw_services
+        return MsgPackProtocol(self, name, authenticated=authenticated)
 
     def report(self, object, ids, datas=None, context=None):
         return self.report_service.report(object, ids, datas, context)

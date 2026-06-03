@@ -6,6 +6,9 @@ import sys
 from . import connect
 
 
+SERVICE_AUTH_CHOICES = ('auto', 'raw', 'authenticated')
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog='pygisceclient',
@@ -39,15 +42,28 @@ def build_parser():
         '--password', '-p',
         help='Password for authentication (required when --user is used)',
     )
-    parser.add_argument(
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument(
         '--model', '-m',
-        required=True,
         help='Model name, e.g. res.users',
+    )
+    target.add_argument(
+        '--service', '-s',
+        help='Service name, e.g. common, db, report',
     )
     parser.add_argument(
         '--method',
         required=True,
-        help='Method name to call on the model, e.g. search',
+        help='Method name to call on the model or service, e.g. search',
+    )
+    parser.add_argument(
+        '--service-auth',
+        choices=SERVICE_AUTH_CHOICES,
+        default='auto',
+        help=(
+            'Authentication mode for --service calls. auto uses raw for '
+            'common/db/wc and authenticated for the other services.'
+        ),
     )
     parser.add_argument(
         '--args',
@@ -91,6 +107,9 @@ def main(argv=None):
     if not isinstance(call_kwargs, dict):
         parser.error('--kwargs must be a JSON object')
 
+    if args.service and call_kwargs:
+        parser.error('--kwargs is only supported with --model')
+
     connect_kwargs = {
         'verify': not args.no_verify,
     }
@@ -115,11 +134,24 @@ def main(argv=None):
         sys.exit(1)
 
     try:
-        model = client.model(args.model)
-        method = getattr(model, args.method)
+        target_name = args.model or args.service
+        if args.model:
+            target = client.model(args.model)
+        else:
+            if not hasattr(client, 'service'):
+                raise Exception(
+                    'Service calls are not supported by this protocol'
+                )
+            service_auth = {
+                'auto': None,
+                'raw': False,
+                'authenticated': True,
+            }[args.service_auth]
+            target = client.service(args.service, authenticated=service_auth)
+        method = getattr(target, args.method)
         result = method(*call_args, **call_kwargs)
     except Exception as exc:
-        print('Error calling {}.{}: {}'.format(args.model, args.method, exc), file=sys.stderr)
+        print('Error calling {}.{}: {}'.format(target_name, args.method, exc), file=sys.stderr)
         sys.exit(1)
 
     print(json.dumps(result, indent=2, default=str))

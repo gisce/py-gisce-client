@@ -34,10 +34,39 @@ class TestBuildParser(object):
         assert args.user == 'admin'
         assert args.password == 'secret'
         assert args.model == 'res.users'
+        assert args.service is None
         assert args.method == 'search'
+        assert args.service_auth == 'auto'
         assert args.args == '[]'
         assert args.kwargs == '{}'
         assert not args.no_verify
+
+    def test_parses_service_target(self):
+        parser = build_parser()
+        args = parser.parse_args([
+            '--url', 'https+msgpack://erp.example.com',
+            '--database', 'mydb',
+            '--token', 'mytoken',
+            '--service', 'common',
+            '--method', 'check_for_features',
+            '--args', '[["feature_a"]]',
+        ])
+        assert args.model is None
+        assert args.service == 'common'
+        assert args.method == 'check_for_features'
+        assert args.service_auth == 'auto'
+
+    def test_model_and_service_are_mutually_exclusive(self):
+        parser = build_parser()
+        with pytest.raises(SystemExit):
+            parser.parse_args([
+                '--url', 'https+msgpack://erp.example.com',
+                '--database', 'mydb',
+                '--token', 'mytoken',
+                '--model', 'res.users',
+                '--service', 'common',
+                '--method', 'check_for_features',
+            ])
 
     def test_parses_token_auth(self):
         parser = build_parser()
@@ -230,6 +259,74 @@ class TestMain(object):
 
         captured = capsys.readouterr()
         assert json.loads(captured.out) == mock_result
+
+    def test_successful_service_call_uses_auto_auth(self, capsys):
+        mock_result = {'feature_a': {'name': 'feature_a'}}
+        mock_service = MagicMock()
+        mock_service.check_for_features.return_value = mock_result
+        mock_client = MagicMock()
+        mock_client.service.return_value = mock_service
+
+        with patch('gisce.cli.connect', return_value=mock_client) as mock_connect:
+            main([
+                '--url', 'https+msgpack://erp.example.com',
+                '--database', 'mydb',
+                '--token', 'mytoken',
+                '--service', 'common',
+                '--method', 'check_for_features',
+                '--args', '[["feature_a"]]',
+            ])
+
+        mock_connect.assert_called_once_with(
+            'https+msgpack://erp.example.com',
+            'mydb',
+            verify=True,
+            token='mytoken',
+        )
+        mock_client.service.assert_called_once_with(
+            'common',
+            authenticated=None,
+        )
+        mock_service.check_for_features.assert_called_once_with(['feature_a'])
+
+        captured = capsys.readouterr()
+        assert json.loads(captured.out) == mock_result
+
+    def test_service_auth_can_be_forced_from_cli(self, capsys):
+        mock_service = MagicMock()
+        mock_service.report.return_value = 'report-id'
+        mock_client = MagicMock()
+        mock_client.service.return_value = mock_service
+
+        with patch('gisce.cli.connect', return_value=mock_client):
+            main([
+                '--url', 'https+msgpack://erp.example.com',
+                '--database', 'mydb',
+                '--token', 'mytoken',
+                '--service', 'report',
+                '--service-auth', 'authenticated',
+                '--method', 'report',
+                '--args', '["report.name", [1], {}, {}]',
+            ])
+
+        mock_client.service.assert_called_once_with(
+            'report',
+            authenticated=True,
+        )
+        captured = capsys.readouterr()
+        assert json.loads(captured.out) == 'report-id'
+
+    def test_service_call_rejects_kwargs(self, capsys):
+        with pytest.raises(SystemExit) as exc_info:
+            main([
+                '--url', 'https+msgpack://erp.example.com',
+                '--database', 'mydb',
+                '--token', 'mytoken',
+                '--service', 'common',
+                '--method', 'check_for_features',
+                '--kwargs', '{"context": {}}',
+            ])
+        assert exc_info.value.code != 0
 
     def test_connect_error_exits(self, capsys):
         with patch('gisce.cli.connect', side_effect=Exception('connection refused')):
