@@ -22,6 +22,10 @@ password = 'admin'
 database = 'test'
 c = Client(url, database=database, user=user, password=password)
 users_obj = c.model('res.users')
+
+features = c.common.check_for_features(['my_feature'])
+databases = c.db.list()
+report_id = c.report('account.invoice', [1])
 ```
 
 ## Using XML-RPC API interface
@@ -85,7 +89,8 @@ After installing the package, a `pygisceclient` command is available. This is us
 ```
 usage: pygisceclient [-h] --url URL --database DATABASE
                      (--token TOKEN | --user USER) [--password PASSWORD]
-                     --model MODEL --method METHOD
+                     (--model MODEL | --service SERVICE) --method METHOD
+                     [--service-auth {auto,raw,authenticated}]
                      [--args ARGS] [--kwargs KWARGS] [--no-verify]
 ```
 
@@ -99,7 +104,9 @@ usage: pygisceclient [-h] --url URL --database DATABASE
 | `--user USER` | `-u` | Username |
 | `--password PASS` | `-p` | Password (required with `--user`) |
 | `--model MODEL` | `-m` | Model name (e.g. `res.users`) |
-| `--method METHOD` | | Method name (e.g. `search`) |
+| `--service SERVICE` | `-s` | Service name (e.g. `common`, `db`, `report`) |
+| `--method METHOD` | | Method name (e.g. `search`, `check_for_features`) |
+| `--service-auth MODE` | | Auth mode for service calls: `auto`, `raw`, or `authenticated` |
 | `--args JSON` | | Positional arguments as a JSON array (default `[]`) |
 | `--kwargs JSON` | | Keyword arguments as a JSON object (default `{}`) |
 | `--no-verify` | | Disable SSL certificate verification |
@@ -133,6 +140,23 @@ pygisceclient \
 ```
 
 The result is printed as JSON to standard output.
+
+Call a MsgPack service directly:
+
+```bash
+pygisceclient \
+  --url https+msgpack://erp.example.com \
+  --database mydb \
+  --token myapitoken \
+  --service common \
+  --method check_for_features \
+  --args '[["feature_a", "feature_b"]]'
+```
+
+Service calls use positional JSON arguments. By default, `common`, `db` and
+`wc` are called raw because several of their methods do not receive `database`,
+`uid` and `password`; other services are called authenticated. Use
+`--service-auth raw` or `--service-auth authenticated` to force one mode.
 
 ## Standalone release binary
 
