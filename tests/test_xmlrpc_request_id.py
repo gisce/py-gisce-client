@@ -48,10 +48,10 @@ class TestXmlRpcRequestId(object):
             # Verify that transport was created
             assert mock_server_proxy.call_count == 3
             
-            # Check that BaseTransportWithRequestId was used (verify=None case)
+            # Check that HTTP transport was used for HTTP URLs
             transport_arg = mock_server_proxy.call_args_list[0][1].get('transport')
             assert transport_arg is not None
-            assert isinstance(transport_arg, XmlRpcClient.BaseTransportWithRequestId)
+            assert isinstance(transport_arg, XmlRpcClient.TransportWithRequestId)
 
     def test_xmlrpc_unverified_transport_adds_request_id(self):
         """Test that XmlRpcClient unverified transport adds X-Request-Id header"""
@@ -77,7 +77,7 @@ class TestXmlRpcRequestId(object):
             
             # Create client with verify=False
             client = XmlRpcClient(
-                url='http://localhost:8069',
+                url='https://localhost:8069',
                 database='test_db',
                 user='admin',
                 password='admin',
@@ -88,6 +88,39 @@ class TestXmlRpcRequestId(object):
             transport_arg = mock_server_proxy.call_args_list[0][1].get('transport')
             assert transport_arg is not None
             assert isinstance(transport_arg, XmlRpcClient.UnverifiedSSLTransport)
+
+    def test_xmlrpc_http_uses_http_transport_when_verify_false(self):
+        """HTTP URLs must not use an HTTPS-only transport."""
+        with patch('gisce.xmlrpc.ServerProxy') as mock_server_proxy:
+            mock_common = Mock()
+            mock_common.login.return_value = 1
+
+            mock_object = Mock()
+            mock_object.obj_list.return_value = ['test.model']
+
+            mock_report = Mock()
+
+            def server_proxy_factory(url, **kwargs):
+                if 'common' in url:
+                    return mock_common
+                elif 'report' in url:
+                    return mock_report
+                else:
+                    return mock_object
+
+            mock_server_proxy.side_effect = server_proxy_factory
+
+            XmlRpcClient(
+                url='http://localhost:8069',
+                database='test_db',
+                user='admin',
+                password='admin',
+                verify=False
+            )
+
+            transport_arg = mock_server_proxy.call_args_list[0][1].get('transport')
+            assert transport_arg is not None
+            assert isinstance(transport_arg, XmlRpcClient.TransportWithRequestId)
 
     def test_transport_send_content_adds_header(self):
         """Test that transport's send_content method adds X-Request-Id"""
