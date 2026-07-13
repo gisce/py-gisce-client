@@ -3,11 +3,11 @@ from getpass import getpass
 PY2 = sys.version_info < (3, 0, 0)
 
 if PY2:
-    from xmlrpclib import ServerProxy, SafeTransport
+    from xmlrpclib import ServerProxy, Transport, SafeTransport
     import httplib
     import __builtin__ as builtins
 else:
-    from xmlrpc.client import ServerProxy, SafeTransport
+    from xmlrpc.client import ServerProxy, Transport, SafeTransport
     import http.client as httplib
     import builtins
 

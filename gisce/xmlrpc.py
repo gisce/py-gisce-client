@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import uuid
 from .base import BaseClient, PositionArgumentsModel, to_dot
-from .compat import ServerProxy, SafeTransport, httplib
+from .compat import ServerProxy, Transport, SafeTransport, httplib
 
 
 class XmlRpcModel(PositionArgumentsModel):
@@ -18,6 +18,11 @@ class XmlRpcModel(PositionArgumentsModel):
 
 class XmlRpcClient(BaseClient):
     model_class = XmlRpcModel
+
+    class TransportWithRequestId(Transport):
+        def send_content(self, connection, request_body):
+            connection.putheader("X-Request-Id", str(uuid.uuid4()))
+            Transport.send_content(self, connection, request_body)
 
     class BaseTransportWithRequestId(SafeTransport):
         def send_content(self, connection, request_body):
@@ -38,10 +43,13 @@ class XmlRpcClient(BaseClient):
     def __init__(self, url, database, token=None, user=None, password=None, verify=None):
         super(XmlRpcClient, self).__init__()
         self.url = url + '/xmlrpc'
-        if verify is not None and not verify:
+        is_https = url.lower().startswith('https://')
+        if is_https and verify is not None and not verify:
             self.server_proxy_kwargs = {'transport': self.UnverifiedSSLTransport()}
-        else:
+        elif is_https:
             self.server_proxy_kwargs = {'transport': self.BaseTransportWithRequestId()}
+        else:
+            self.server_proxy_kwargs = {'transport': self.TransportWithRequestId()}
         self.common = ServerProxy(self.url + '/common', allow_none=True, **self.server_proxy_kwargs)
         self.object = ServerProxy(self.url + '/object', allow_none=True, **self.server_proxy_kwargs)
         self.report_service = ServerProxy(self.url + '/report', allow_none=True, **self.server_proxy_kwargs)
