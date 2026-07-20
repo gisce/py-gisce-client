@@ -49,7 +49,7 @@ jobs:
           config_file: releaserc.toml
           # Semantic release must push the version bump commit and the matching
           # tag. On protected main, configure GH_PAT with the required bypass.
-          github_token: ${{ secrets.GH_PAT || github.token }}
+          github_token: ${{ secrets.PUB_MASTER_PUSH_TOKEN || github.token }}
           git_committer_name: "github-actions"
           git_committer_email: "actions@users.noreply.github.com"
 
