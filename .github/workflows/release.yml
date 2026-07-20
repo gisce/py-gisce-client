@@ -85,7 +85,7 @@ jobs:
         uses: python-semantic-release/publish-action@v10.5.3
         with:
           config_file: releaserc.toml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PUB_MASTER_PUSH_TOKEN }}
           tag: ${{ steps.release.outputs.tag }}
 
       - name: Publish Python distribution to PyPI
