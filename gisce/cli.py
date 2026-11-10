@@ -40,7 +40,7 @@ def build_parser():
 
     parser.add_argument(
         '--password', '-p',
-        help='Password for authentication (required when --user is used)',
+        help='Password for authentication (prompted when omitted)',
     )
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument(
@@ -87,9 +87,6 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
-
-    if args.user and not args.password:
-        parser.error('--password is required when --user is provided')
 
     try:
         call_args = json.loads(args.args)

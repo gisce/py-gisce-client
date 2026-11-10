@@ -102,7 +102,7 @@ usage: pygisceclient [-h] --url URL --database DATABASE
 | `--database DB` | `-d` | Database name |
 | `--token TOKEN` | | Authentication token |
 | `--user USER` | `-u` | Username |
-| `--password PASS` | `-p` | Password (required with `--user`) |
+| `--password PASS` | `-p` | Password; prompted interactively when omitted |
 | `--model MODEL` | `-m` | Model name (e.g. `res.users`) |
 | `--service SERVICE` | `-s` | Service name (e.g. `common`, `db`, `report`) |
 | `--method METHOD` | | Method name (e.g. `search`, `check_for_features`) |
@@ -125,6 +125,9 @@ pygisceclient \
   --method search \
   --args '[[["active", "=", true]]]'
 ```
+
+When `--user` is provided without `--password`, the CLI securely prompts for
+the password on an interactive terminal. Non-interactive calls must provide it.
 
 Read specific fields via REST API using a token:
 
