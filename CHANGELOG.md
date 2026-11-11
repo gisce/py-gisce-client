@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.0.1 (2026-11-11)
+
+### Bug Fixes
+
+- Prompt for omitted CLI password ([#41](https://github.com/gisce/py-gisce-client/pull/41),
+  [`ac5391d`](https://github.com/gisce/py-gisce-client/commit/ac5391d849be450a595efaa12fcf07806ac6c626))
+
+
 ## v1.0.0 (2026-07-20)
 
 ### Bug Fixes
