@@ -51,7 +51,8 @@ Use `http+…` variants for non-TLS connections. Add `--no-verify` to skip SSL c
 - **User/password**: `--user admin --password secret`
 - **Token**: `--token <API_TOKEN>`
 
-`--password` is required when `--user` is provided.
+When `--user` is provided without `--password`, the CLI securely prompts on an
+interactive terminal. Non-interactive calls must provide `--password`.
 
 ---
 

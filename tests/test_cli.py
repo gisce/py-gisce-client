@@ -137,8 +137,11 @@ class TestBuildParser(object):
 class TestMain(object):
     """Integration-style tests for the main() entry point"""
 
-    def test_missing_password_with_user_exits(self, capsys):
-        with pytest.raises(SystemExit) as exc_info:
+    def test_missing_password_with_user_is_delegated_to_client(self, capsys):
+        mock_client = MagicMock()
+        mock_client.model.return_value.search.return_value = []
+
+        with patch('gisce.cli.connect', return_value=mock_client) as mock_connect:
             main([
                 '--url', 'https+xmlrpc://erp.example.com',
                 '--database', 'mydb',
@@ -146,7 +149,14 @@ class TestMain(object):
                 '--model', 'res.users',
                 '--method', 'search',
             ])
-        assert exc_info.value.code != 0
+
+        mock_connect.assert_called_once_with(
+            'https+xmlrpc://erp.example.com',
+            'mydb',
+            verify=True,
+            user='admin',
+            password=None,
+        )
 
     def test_invalid_args_json_exits(self, capsys):
         with pytest.raises(SystemExit) as exc_info:
